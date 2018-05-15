@@ -9,11 +9,22 @@ from uuid import uuid4
 import dao
 from typing import Tuple
 from io import BytesIO
-import time, random
+import time, random, os
+
+def _wait_for(func):
+    res = None
+    while not res:
+        try:
+            res = func()
+        except Exception:
+            time.sleep(0.1)
+    return res
+
+db_host = os.environ.get('DB_HOST', 'localhost')
 
 app = Flask('resilient-design')
 
-db_pool = dao.get_connection_pool(10, 2, 'localhost', 'resilient-design', 'user', 'password')
+db_pool = _wait_for(lambda: dao.get_connection_pool(10, 2, db_host, 'resilient-design', 'app', 'password'))
 
 @app.route('/')
 def home():

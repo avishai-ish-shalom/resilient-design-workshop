@@ -1,5 +1,4 @@
 flask
 gunicorn
 Pillow
-git+https://github.com/circonus-labs/python-circonusapi
 psycopg2-binary
