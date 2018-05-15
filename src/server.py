@@ -2,25 +2,33 @@
 
 from flask import Flask, g, abort, request, make_response, Response
 from flask import jsonify
+from psycopg2 import IntegrityError
 
-from circonusapi import circonusapi
-from circonusapi import config
 from PIL import ImageFilter, Image
 from uuid import uuid4
 import dao
 from typing import Tuple
 from io import BytesIO
-
-c = config.load_config()
+import time, random
 
 app = Flask('resilient-design')
 
-db_pool = dao.get_connection_pool(1, 2, 'localhost', 'resilient-design', 'user', 'password')
+db_pool = dao.get_connection_pool(10, 2, 'localhost', 'resilient-design', 'user', 'password')
 
 @app.route('/')
 def home():
     return jsonify(status='ok')
 
+
+@app.route('/sleep')
+def sleep():
+    duration = float(request.args.get('time', 0.2))
+    jitter = float(request.args.get('jitter', ))
+    delta = (random.random() - 0.5) * jitter
+    sleep_time = duration + delta
+    app.logger.info('Sleeping for %f seconds', sleep_time)
+    time.sleep(sleep_time)
+    return 'ZZZZZZZ\n'
 
 @app.route('/image/<id>')
 def get_image(id):
@@ -47,19 +55,40 @@ def get_image(id):
 def put_image():
     if not request.data:
         abort(400)
-    with dao.with_cursor(db_pool) as cursor:
-        image_id = str(uuid4())
-        if dao.save_image(cursor, image_id, request.data):
-            return image_id
+    saved_id = _save_img(str(uuid4()), request.data)
+    if saved_id:
+        return saved_id
+    else:
+        return make_response('Could not save image\n', 500)
+
+
+@app.route('/image/<image_id>', methods=['POST'])
+def post_image(image_id):
+    if not request.data:
+        abort(400)
+    
+    try:
+        saved_id = _save_img(image_id, request.data)
+        if saved_id:
+            return saved_id
         else:
-            return make_response('Could not save image', 500)
+            return make_response('Could not save image\n', 500)
+    except IntegrityError:
+        return make_response('Image already exists\n', 409)
+
+
+def _save_img(image_id, img):
+    with dao.with_cursor(db_pool) as cursor:
+        if dao.save_image(cursor, image_id, img):
+            return image_id
+
 
 
 @app.route('/image/<image_id>', methods=['DELETE'])
 def delete_image(image_id):
     with dao.with_cursor(db_pool) as c:
         if dao.delete_image(c, image_id):
-            abort(204)
+            return make_response('DELETED\n', 204)
         else:
             abort(404)
 

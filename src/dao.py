@@ -1,13 +1,18 @@
 from psycopg2 import Binary
-from psycopg2.pool import ThreadedConnectionPool 
+from psycopg2.pool import PoolError
+from connection_pool import WaitableThreadedConnectionPool
 from contextlib import contextmanager
+from logging import Logger
+
+logger = Logger('dao')
 
 def get_connection_pool(minconn, maxconn, host, database, user, password):
-    return ThreadedConnectionPool(minconn, maxconn,
+    return WaitableThreadedConnectionPool(minconn, maxconn,
                                     database=database,
                                     host=host,
                                     user=user,
-                                    password=password)
+                                    password=password,
+                                    timeout=1)
 
 
 @contextmanager
@@ -16,8 +21,10 @@ def with_cursor(pool):
         connection = pool.getconn()
         with connection, connection.cursor() as c:
             yield c
-    finally:
         pool.putconn(connection)
+    except PoolError as e:
+        logger.error('Error getting DB connection from pool: %s', e, exc_info=1)
+        raise e
 
 
 def init_db(c):
@@ -27,7 +34,8 @@ def init_db(c):
 def get_image(cursor, image_id):
     cursor.execute('SELECT data FROM image WHERE id=%s', (image_id,))
     data = cursor.fetchone()
-    return data[0]
+    if data:
+        return data[0]
 
 
 def save_image(cursor, image_id, image):
