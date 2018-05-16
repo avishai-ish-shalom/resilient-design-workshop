@@ -70,21 +70,22 @@ def sleep():
 def get_image(id):
     with dao.with_cursor(db_pool) as cursor:
         img_blob = dao.get_image(cursor, str(id))
-        if img_blob is None:
-            abort(404)
-        else:
-            img = Image.open(BytesIO(img_blob))
 
-            size = parse_size(request.args.get('size', ''))
-            if size:
-                img = resize(img, size)
+    if img_blob is None:
+        abort(404)
+    else:
+        img = Image.open(BytesIO(img_blob))
 
-            blur = request.args.get('blur') is not None
-            if blur:
-                img = img.filter(ImageFilter.BLUR)
+        size = parse_size(request.args.get('size', ''))
+        if size:
+            img = resize(img, size)
 
-            resp = make_img_response(img)
-            return resp
+        blur = request.args.get('blur') is not None
+        if blur:
+            img = img.filter(ImageFilter.BLUR)
+
+        resp = make_img_response(img)
+        return resp
 
 
 @app.route('/image/', methods=['PUT'])
@@ -123,10 +124,12 @@ def _save_img(image_id, img):
 @app.route('/image/<image_id>', methods=['DELETE'])
 def delete_image(image_id):
     with dao.with_cursor(db_pool) as c:
-        if dao.delete_image(c, image_id):
-            return make_response('DELETED\n', 204)
-        else:
-            abort(404)
+        deleted = dao.delete_image(c, image_id)
+
+    if deleted:
+        return make_response('DELETED\n', 204)
+    else:
+        abort(404)
 
 @app.cli.command('initdb')
 def init_db():
