@@ -21,16 +21,19 @@ def get_connection_pool(minconn, maxconn, timeout, host, database, user, passwor
 
 @contextmanager
 def with_cursor(pool):
+    s1 = time.time()
+
     try:
-        s1 = time.time()
         connection = pool.getconn()
-        statsd.timing('db_pool.get_conn', time.time() - s1)
-        with connection, connection.cursor() as c:
-            yield c
-        pool.putconn(connection)
     except PoolError as e:
         logger.error('Error getting DB connection from pool: %s', e, exc_info=1)
         raise e
+
+    statsd.timing('db_pool.get_conn', time.time() - s1)
+
+    with connection, connection.cursor() as c:
+        yield c
+    pool.putconn(connection)
 
 
 def init_db(c):
