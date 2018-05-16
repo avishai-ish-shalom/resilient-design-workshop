@@ -3,8 +3,12 @@ from psycopg2.pool import PoolError
 from connection_pool import WaitableThreadedConnectionPool
 from contextlib import contextmanager
 from logging import Logger
+from statsd import StatsClient
+import time
 
+statsd = StatsClient(prefix='host.app')
 logger = Logger('dao')
+
 
 def get_connection_pool(minconn, maxconn, host, database, user, password):
     return WaitableThreadedConnectionPool(minconn, maxconn,
@@ -18,7 +22,9 @@ def get_connection_pool(minconn, maxconn, host, database, user, password):
 @contextmanager
 def with_cursor(pool):
     try:
+        s1 = time.time()
         connection = pool.getconn()
+        statsd.timing('db_pool.get_conn', time.time() - s1)
         with connection, connection.cursor() as c:
             yield c
         pool.putconn(connection)

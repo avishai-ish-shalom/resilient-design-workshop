@@ -1,0 +1,4 @@
+{
+    "db_pool_connections": 1,
+    "db_pool_timeout": 5
+}

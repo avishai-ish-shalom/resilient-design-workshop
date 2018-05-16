@@ -10,6 +10,14 @@ import dao
 from typing import Tuple
 from io import BytesIO
 import time, random, os
+import json
+
+try:
+    with open('./config.json', 'r') as f:
+        config = json.load(f)
+        print('Configuration loaded')
+except Exception:
+    config = {'db_pool_timeout': 10, 'db_pool_connections': 2}
 
 def _wait_for(func):
     res = None
@@ -24,7 +32,7 @@ db_host = os.environ.get('DB_HOST', 'localhost')
 
 app = Flask('resilient-design')
 
-db_pool = _wait_for(lambda: dao.get_connection_pool(10, 2, db_host, 'resilient-design', 'app', 'password'))
+db_pool = _wait_for(lambda: dao.get_connection_pool(config['db_pool_timeout'], config['db_pool_connections'], db_host, 'resilient-design', 'app', 'password'))
 
 @app.route('/')
 def home():

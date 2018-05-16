@@ -70,7 +70,7 @@ Description=app
 After=syslog.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/gunicorn -b :8881 --pythonpath /workshop/src server:app
+ExecStart=/usr/local/bin/gunicorn -b :8881 --pythonpath /workshop/src --config /workshop/gunicorn.config server:app
 Type=simple
 WorkingDirectory=/workshop
 User=admin
