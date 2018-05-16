@@ -79,7 +79,7 @@ User=admin
 WantedBy=multi-user.target
 EOF
 
-cat - >/etc/system/circonus-agent.service <<-"EOF"
+cat - >/etc/systemd/system/circonus-agent.service <<-"EOF"
 [Unit]
 Description=circonus-agent
 After=syslog.target network.target
@@ -104,6 +104,6 @@ sudo -u admin git pull
 EOF
 
 cat > /etc/profile.d/workshop.sh <<'EOF'
-alias restart-app=sudo systemctl restart app.service
-alias error-log=journalctl _SYSTEMD_UNIT=app.service
+alias restart_app='sudo systemctl restart app.service'
+alias error_log='journalctl _SYSTEMD_UNIT=app.service'
 EOF
