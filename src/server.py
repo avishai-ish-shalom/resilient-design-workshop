@@ -32,7 +32,7 @@ db_host = os.environ.get('DB_HOST', 'localhost')
 
 app = Flask('resilient-design')
 
-db_pool = _wait_for(lambda: dao.get_connection_pool(config['db_pool_timeout'], config['db_pool_connections'], db_host, 'resilient-design', 'app', 'password'))
+db_pool = _wait_for(lambda: dao.get_connection_pool(config['db_pool_connections'], config['db_pool_connections'], config['db_pool_timeout'], db_host, 'resilient-design', 'app', 'password'))
 
 @app.route('/')
 def home():

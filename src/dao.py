@@ -10,13 +10,13 @@ statsd = StatsClient(prefix='host.app')
 logger = Logger('dao')
 
 
-def get_connection_pool(minconn, maxconn, host, database, user, password):
+def get_connection_pool(minconn, maxconn, timeout, host, database, user, password):
     return WaitableThreadedConnectionPool(minconn, maxconn,
                                     database=database,
                                     host=host,
                                     user=user,
                                     password=password,
-                                    timeout=1)
+                                    timeout=timeout)
 
 
 @contextmanager
