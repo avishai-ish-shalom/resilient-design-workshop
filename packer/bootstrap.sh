@@ -49,7 +49,7 @@ cp /workshop/packer/nginx.conf /etc/nginx/sites-available/app
 ln -s ../sites-available/app /etc/nginx/sites-enabled/app
 
 pip3 install statsd
-mkdir -p /varl/ib/circonus/{state,plugins}
+mkdir -p /var/lib/circonus/{state,plugins}
 
 cat - >/etc/systemd/system/log2statsd.service <<-"EOF"
 [Unit]
@@ -70,7 +70,7 @@ Description=app
 After=syslog.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/gunicorn -b :8881 --pythonpath /workshop/src --config /workshop/gunicorn.config server:app
+ExecStart=/usr/local/bin/gunicorn -b :8881 --pythonpath /workshop/src --statsd-prefix host --statsd-host localhost:8125 --config /workshop/gunicorn.config server:app
 Type=simple
 WorkingDirectory=/workshop
 User=admin
@@ -85,7 +85,7 @@ Description=circonus-agent
 After=syslog.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/circonus-agentd --api-key e79ccd26-8955-4275-9172-34c477e8b310 -p /var/lib/circonus/plugins -C -E --check-metric-state-dir /varl/ib/circonus/state
+ExecStart=/usr/local/bin/circonus-agentd --api-key e79ccd26-8955-4275-9172-34c477e8b310 -p /var/lib/circonus/plugins -C -E --check-metric-state-dir /var/lib/circonus/state -r
 Type=simple
 
 [Install]

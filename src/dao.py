@@ -29,7 +29,7 @@ def with_cursor(pool):
         logger.error('Error getting DB connection from pool: %s', e, exc_info=1)
         raise e
 
-    statsd.timing('db_pool.get_conn', time.time() - s1)
+    statsd.timing('db_pool.get_conn', (time.time() - s1)*1000)
 
     with connection, connection.cursor() as c:
         yield c
