@@ -10,6 +10,8 @@ echo "deb http://ftp.debian.org/debian stretch-backports main" >> /etc/apt/sourc
 apt-get update
 apt-get install -y python3 python3-pip nginx postgresql postgresql-client python3-dev build-essential golang-1.10 libssl-dev zlib1g-dev libpcap-dev git tmux vim
 
+git clone https://github.com/avishai-ish-shalom/resilient-design-workshop.git /workshop
+
 pip3 install -r /workshop/requirements.txt
 
 mkdir -p /usr/local/go/src
@@ -41,6 +43,7 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 <<-"EOSQL"
 EOSQL
 cd /workshop
 PYTHONPATH=src FLASK_APP=server:app flask initdb
+bash load_images.sh
 
 cp /workshop/packer/nginx.conf /etc/nginx/sites-available/app
 ln -s ../sites-available/app /etc/nginx/sites-enabled/app
@@ -69,6 +72,8 @@ After=syslog.target network.target
 [Service]
 ExecStart=/usr/local/bin/gunicorn -b :8881 --pythonpath /workshop/src server:app
 Type=simple
+WorkingDirectory=/workshop
+User=admin
 
 [Install]
 WantedBy=multi-user.target
@@ -90,3 +95,15 @@ EOF
 systemctl enable app.service
 systemctl enable log2statsd.service
 systemctl enable circonus-agent.service
+
+chown admin -R /workshop
+
+cat > /etc/rc.local <<'EOF'
+cd /workshop
+sudo -u admin git pull
+EOF
+
+cat > /etc/profile.d/workshop.sh <<'EOF'
+alias restart-app=sudo systemctl restart app.service
+alias error-log=journalctl _SYSTEMD_UNIT=app.service
+EOF

@@ -24,15 +24,6 @@
 	    }
     ],
     "provisioners": [
-        {
-            "type": "shell",
-            "inline": ["sudo mkdir -m 0755 /workshop", "sudo chown admin /workshop"]
-        },
-        {
-            "type": "file",
-            "source": "../",
-            "destination": "/workshop/"
-        },
     	{
     		"type": "shell",
             "script": "bootstrap.sh",
