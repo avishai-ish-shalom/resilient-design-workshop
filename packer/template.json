@@ -1,0 +1,42 @@
+{
+	"variables": {
+	    "aws_access_key": "{{ env `AWS_ACCESS_KEY_ID` }}",
+	    "aws_secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+	    "aws_region": "eu-central-1",
+	    "source_ami": "ami-cd496626",
+	    "subnet_id": "subnet-24e10b4d"
+	},
+	"builders": [
+	    {
+	      "type": "amazon-ebs",
+	      "access_key": "{{ user `aws_access_key` }}",
+	      "secret_key": "{{ user `aws_secret_key` }}",
+	      "region": "{{ user `aws_region` }}",
+	      "source_ami": "{{ user `source_ami` }}",
+	      "instance_type": "t2.large",
+          "associate_public_ip_address": true,
+          "subnet_id": "{{ user `subnet_id` }}",
+	      "ssh_username": "admin",
+	      "ami_name": "rubber-docker-{{timestamp}}",
+          "ami_groups": [
+              "all"
+          ]
+	    }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": ["sudo mkdir -m 0755 /workshop", "sudo chown admin /workshop"]
+        },
+        {
+            "type": "file",
+            "source": "../",
+            "destination": "/workshop/"
+        },
+    	{
+    		"type": "shell",
+            "script": "bootstrap.sh",
+            "execute_command": "chmod +x {{ .Path }}; sudo env {{ .Vars }} {{ .Path }}"
+    	}
+    ]
+}
