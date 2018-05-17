@@ -11,7 +11,7 @@ from typing import Tuple
 from io import BytesIO
 import time, random, os
 import json
-import logging
+import logging.config
 
 logging.config.dictConfig({
     'version': 1,
