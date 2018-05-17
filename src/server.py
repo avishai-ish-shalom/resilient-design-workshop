@@ -11,6 +11,7 @@ from typing import Tuple
 from io import BytesIO
 import time, random, os
 import json
+from dao import statsd
 import logging.config
 
 logging.config.dictConfig({
@@ -57,6 +58,7 @@ def home():
 
 
 @app.route('/sleep')
+@statsd.timer('sleep')
 def sleep():
     duration = float(request.args.get('time', 0.2))
     jitter = float(request.args.get('jitter', 0.001))
@@ -67,6 +69,7 @@ def sleep():
     return 'ZZZZZZZ\n'
 
 @app.route('/image/<id>')
+@statsd.timer('get_image')
 def get_image(id):
     with dao.with_cursor(db_pool) as cursor:
         img_blob = dao.get_image(cursor, str(id))
@@ -89,6 +92,7 @@ def get_image(id):
 
 
 @app.route('/image/', methods=['PUT'])
+@statsd.timer('put_image')
 def put_image():
     if not request.data:
         abort(400)
@@ -100,6 +104,7 @@ def put_image():
 
 
 @app.route('/image/<image_id>', methods=['POST'])
+@statsd.timer('post_image')
 def post_image(image_id):
     if not request.data:
         abort(400)
@@ -122,6 +127,7 @@ def _save_img(image_id, img):
 
 
 @app.route('/image/<image_id>', methods=['DELETE'])
+@statsd.timer('delete_image')
 def delete_image(image_id):
     with dao.with_cursor(db_pool) as c:
         deleted = dao.delete_image(c, image_id)
