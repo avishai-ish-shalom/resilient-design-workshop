@@ -59,7 +59,7 @@ def home():
 @app.route('/sleep')
 def sleep():
     duration = float(request.args.get('time', 0.2))
-    jitter = float(request.args.get('jitter', ))
+    jitter = float(request.args.get('jitter', 0.001))
     delta = (random.random() - 0.5) * jitter
     sleep_time = duration + delta
     app.logger.info('Sleeping for %f seconds', sleep_time)
