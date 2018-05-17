@@ -40,7 +40,7 @@ function request()
         return wrk.format('PUT', '/image/', {['Content-Type'] = 'image/png'}, read_file('small.png'))
     else
         local id = ids[math.random(1, #ids)]
-        local path = '/image/' .. id
+        local path = '/image/' .. id    
         if extra_args then
             path = path .. '?' .. extra_args
         end

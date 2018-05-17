@@ -26,5 +26,5 @@ for line in sys.stdin:
     if m:
         method, path, proto = m.groupdict()['request'].split(' ')
         if path != '/':
-            path = '/'.join(path.split('/')[:2])
+            path = '/'.join(path.split('?')[0].split('/')[:2])
         c.timing('.'.join(['host', 'nginx', path, method, m.groupdict()['status']]), float(m.groupdict()['request_latency'])*1000)
